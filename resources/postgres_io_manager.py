@@ -1,0 +1,221 @@
+from pandas import DataFrame
+from sqlalchemy import create_engine
+from sqlalchemy.exc import ProgrammingError as SQLAlchemyProgrammingError
+
+from dagster import (
+    Field,
+    StringSource,
+    io_manager,
+    get_dagster_logger,
+    MemoizableIOManager,
+)
+import dagster._check as check
+
+POSTGRES_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+class PostgresIOManager(MemoizableIOManager):
+    def __init__(
+        self,
+        username,
+        password,
+        hostname,
+        port,
+        dbname,
+        partition_expr,
+    ):
+        self.logger = get_dagster_logger()
+
+        self.username = username
+        self.password = password
+        self.hostname = hostname
+        self.port = port
+        self.dbname = dbname
+
+        self.partition_expr = partition_expr.split(",")
+
+        self.engine = create_engine(
+            f"postgresql+psycopg2://"
+            f"{self.username}:{self.password}@{self.hostname}:{self.port}/{self.dbname}"  # noqa: E501
+        )
+
+    def _get_path(self, context) -> str:
+        if context.has_asset_key:
+            path = context.get_asset_identifier()
+
+            if len(path) == 2:
+                self.database_name = path[0]
+                self.schema_name = path[1]
+            else:
+                self.database_name = path[0]
+                self.schema_name = path[2].replace("daily_", "")
+
+        else:
+            path = context.get_identifier()
+            self.database_name = path[0]
+            self.schema_name = path[2].replace("daily_", "")
+
+        return f"{self.database_name}.{self.schema_name}"
+
+    def has_output(self, context):
+        key = self._get_path(context)
+        self.logger.debug("has_output called")
+        self.logger.debug(key)
+        self.logger.debug(context.partition_key)
+        self.logger.debug(context.asset_key)
+        self.logger.debug(context.asset_info)
+        return True
+
+    def _rm_object(self, key, obj):
+
+        where_statement = self._get_where_statement(obj)
+
+        sql_statement = f"DELETE FROM {self.schema_name} "
+        sql_statement += where_statement
+        self.logger.debug(f"Selete on {where_statement}")
+        self.engine.execute(sql_statement)
+
+    def _has_object(self, key, obj):
+
+        where_statement = self._get_where_statement(obj)
+
+        sql_statement = f"SELECT * FROM {self.schema_name} "
+        sql_statement += where_statement
+
+        try:
+            results = self.engine.execute(sql_statement).fetchall()
+            found_object = bool(len(results))
+        except SQLAlchemyProgrammingError as e:
+            self.logger.warning(e)
+            found_object = False
+
+        return found_object
+
+    def _get_where_statement(self, obj):
+        where_statement = "WHERE "
+
+        partition_expr_values = obj[self.partition_expr]
+        partition_expr_values = partition_expr_values.drop_duplicates()
+
+        _has_previous_condition = False
+        for index, row in partition_expr_values.iterrows():
+            if _has_previous_condition:
+                where_statement += " OR "
+
+            _has_previous_partition_expr = False
+
+            where_statement += "("
+
+            for expr in self.partition_expr:
+                if _has_previous_partition_expr:
+                    where_statement += " AND "
+                where_statement += f"{expr} = '{row[expr]}'"
+                _has_previous_partition_expr = True
+
+            _has_previous_condition = True
+
+            where_statement += ")"
+
+        return where_statement
+
+    def load_input(self, context) -> DataFrame:
+        key = self._get_path(context)
+
+        self.logger.debug(
+            f"Checking data from {key} for partition {context.partition_key}"
+        )
+
+        sql_statement = f"SELECT * FROM {self.schema_name} "
+
+        if context.partition_key:
+            sql_statement += f"WHERE partition_key = '{context.partition_key}'"
+
+        obj = DataFrame.read_sql(sql_statement, con=self.engine)
+
+        return obj
+
+    def handle_output(self, context, obj):
+        key = self._get_path(context)
+
+        if isinstance(context.dagster_type.typing_type, type(None)):
+            check.invariant(
+                obj is None,
+                "Output had Nothing type or 'None' annotation, "
+                "but handle_output received value "
+                f"that was not None and was of type {type(obj)}.",
+            )
+            return None
+
+        context.log.debug(f"Writing DB object at: {key}")
+
+        if self._has_object(key, obj):
+            context.log.warning(f"Removing existing DB entries from {key}.")
+            self._rm_object(key, obj)
+
+        if obj is not None:
+            obj.to_sql(
+                self.schema_name,
+                con=self.engine,
+                index=False,
+                if_exists="append",
+            )
+            context.add_output_metadata(
+                {
+                    "database_name": self.database_name,
+                    "schema_name": self.schema_name,
+                    "num_rows": len(obj.index),
+                }
+                | context.metadata
+            )
+
+        else:
+            context.add_output_metadata(
+                {
+                    "database_name": self.database_name,
+                    "schema_name": self.schema_name,
+                    "num_rows": 0,
+                }
+            )
+
+
+@io_manager(
+    config_schema={
+        "username": Field(
+            StringSource,
+        ),
+        "password": Field(
+            StringSource,
+        ),
+        "hostname": Field(
+            StringSource,
+        ),
+        "port": Field(
+            StringSource,
+        ),
+        "dbname": Field(
+            StringSource,
+        ),
+        "partition_expr": Field(
+            StringSource,
+            description="Columns used for partitioning.",
+        ),
+    }
+)
+def postgres_io_manager(init_context):
+    username = init_context.resource_config.get("username")
+    password = init_context.resource_config.get("password")
+    hostname = init_context.resource_config.get("hostname")
+    port = init_context.resource_config.get("port")
+    dbname = init_context.resource_config.get("dbname")
+    partition_expr = init_context.resource_config.get("partition_expr")
+
+    _postgres_io_manager = PostgresIOManager(
+        username,
+        password,
+        hostname,
+        port,
+        dbname,
+        partition_expr,
+    )
+
+    return _postgres_io_manager
