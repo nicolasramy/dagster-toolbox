@@ -15,7 +15,7 @@ import dagster._check as check
 POSTGRES_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-class PostgresIOManager(MemoizableIOManager):
+class PostgresPartitionedIOManager(MemoizableIOManager):
     def __init__(
         self,
         username,
@@ -23,6 +23,7 @@ class PostgresIOManager(MemoizableIOManager):
         hostname,
         port,
         dbname,
+        partition_expr,
     ):
         self.logger = get_dagster_logger()
 
@@ -31,6 +32,8 @@ class PostgresIOManager(MemoizableIOManager):
         self.hostname = hostname
         self.port = port
         self.dbname = dbname
+
+        self.partition_expr = partition_expr.split(",")
 
         self.engine = create_engine(
             f"postgresql+psycopg2://"
@@ -190,21 +193,27 @@ class PostgresIOManager(MemoizableIOManager):
         "dbname": Field(
             StringSource,
         ),
+        "partition_expr": Field(
+            StringSource,
+            description="Columns used for partitioning.",
+        ),
     }
 )
-def postgres_io_manager(init_context):
+def postgres_partitioned_io_manager(init_context):
     username = init_context.resource_config.get("username")
     password = init_context.resource_config.get("password")
     hostname = init_context.resource_config.get("hostname")
     port = init_context.resource_config.get("port")
     dbname = init_context.resource_config.get("dbname")
+    partition_expr = init_context.resource_config.get("partition_expr")
 
-    _postgres_io_manager = PostgresIOManager(
+    _postgres_io_manager = PostgresPartitionedIOManager(
         username,
         password,
         hostname,
         port,
         dbname,
+        partition_expr,
     )
 
     return _postgres_io_manager
