@@ -1,4 +1,5 @@
 from io import BytesIO
+import json
 
 import pandas
 
@@ -82,10 +83,10 @@ class JsonPartitionedIOManager(MemoizableIOManager):
             self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read()
         )
 
-        obj = pandas.json(
+        obj = pandas.read_json(
             stream_bytes,
+            orient="records",
             encoding="utf-8",
-            dayfirst=False,
         )
 
         return obj
@@ -109,12 +110,13 @@ class JsonPartitionedIOManager(MemoizableIOManager):
             self._rm_object(key)
 
         if obj is not None:
-            pickled_obj = obj.json(
-                date_format="%Y-%m-%d",
-                indent=4,
-                index=False,
+            pickled_obj = obj.to_json(
+                orient="records",
+                date_format="iso",
             )
-            pickled_obj_bytes = BytesIO(bytes(pickled_obj, "utf-8"))
+            pickled_obj_bytes = BytesIO(
+                bytes(json.dumps(json.loads(pickled_obj)), "utf-8")
+            )
             self.s3.upload_fileobj(pickled_obj_bytes, self.bucket, key)
             context.add_output_metadata(
                 {"uri": MetadataValue.path(path)} | context.metadata
