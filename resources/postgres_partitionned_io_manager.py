@@ -45,13 +45,19 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
             path = context.get_asset_identifier()
             context.log.debug(f"Asset identifier: {path}")
 
-            self.database_name = path[0]
-            self.schema_name = path[-2].replace("daily_", "")
+            self.database_name = path[0].replace("-", "_")
+
+            if len(path) == 4:
+                table_prefix = path[1].replace("-", "_")
+                table_name = path[2].replace("-", "_")
+                self.schema_name = f"{table_prefix}__{table_name}"
+            else:
+                self.schema_name = path[-2].replace("daily_", "")
 
         else:
             path = context.get_identifier()
-            self.database_name = path[0]
-            self.schema_name = path[-2].replace("daily_", "")
+            self.database_name = path[0].replace("-", "_")
+            self.schema_name = path[-2].replace("daily_", "").replace("-", "_")
 
         return f"{self.database_name}.{self.schema_name}"
 
@@ -83,6 +89,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
         try:
             results = self.engine.execute(sql_statement).fetchall()
             found_object = bool(len(results))
+
         except SQLAlchemyProgrammingError as e:
             self.logger.warning(e)
             found_object = False
@@ -134,6 +141,12 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
     def handle_output(self, context, obj):
         key = self._get_path(context)
+        context.log.debug(context.metadata)
+        context.log.debug(dir(context))
+        context.log.debug(dir(context.config))
+        context.log.debug(context.config)
+        context.log.debug(context.asset_info)
+        context.log.debug(dir(context.asset_info))
 
         if isinstance(context.dagster_type.typing_type, type(None)):
             check.invariant(
@@ -151,6 +164,12 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
             self._rm_object(key, obj)
 
         if obj is not None:
+            pickled_obj = obj.to_json(
+                orient="records",
+                date_format="iso",
+            )
+            context.log.debug(pickled_obj)
+
             obj.to_sql(
                 self.schema_name,
                 con=self.engine,

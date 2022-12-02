@@ -114,8 +114,9 @@ class JsonPartitionedIOManager(MemoizableIOManager):
                 orient="records",
                 date_format="iso",
             )
+
             pickled_obj_bytes = BytesIO(
-                bytes(json.dumps(json.loads(pickled_obj)), "utf-8")
+                bytes(pickled_obj, "utf-8")
             )
             self.s3.upload_fileobj(pickled_obj_bytes, self.bucket, key)
             context.add_output_metadata(

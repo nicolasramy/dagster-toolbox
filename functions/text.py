@@ -16,6 +16,10 @@ def normalize_header(value):
     return value
 
 
+def snakify(value):
+    return slugify(value, separator="_").lower()
+
+
 def remove_header_infixes(value, infexes):
     """
     infexes = ["ab:", "cd:", "ef:",]
