@@ -29,9 +29,16 @@ class CSVPartitionedIOManager(MemoizableIOManager):
         self.s3.list_objects(Bucket=self.bucket, MaxKeys=1)
 
     def _get_path(self, context) -> str:
+        context.log.debug(context.get_asset_identifier())
+        context.log.debug(context.get_identifier())
+
         if context.has_asset_key:
             path = context.get_asset_identifier()
-            del path[path.index(self.bucket)]
+            bucket_key = self.bucket.replace("-", "_")
+            try:
+                del path[path.index(bucket_key)]
+            except ValueError:
+                ...
 
         else:
             path = ["storage", *context.get_identifier()]
