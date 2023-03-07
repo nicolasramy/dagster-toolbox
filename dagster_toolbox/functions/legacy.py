@@ -101,9 +101,6 @@ def datasource_dataframe(context, key, mapping):
     )
 
     # fmt: off
-    # dataframe["code"] = dataframe["code"].astype(str)
-    # dataframe["name"] = dataframe["name"].astype(str)
-
     dataframe["partition_key"] = [partition_key_datetime] * dataframe_length
     # fmt: on
 

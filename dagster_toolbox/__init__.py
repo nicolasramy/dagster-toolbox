@@ -1,7 +1,8 @@
-from . import functions, resources
+from . import functions, resources, types
 
 
 __all__ = [
     "functions",
     "resources",
+    "types",
 ]

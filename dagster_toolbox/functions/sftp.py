@@ -31,6 +31,7 @@ def prepare_object(file_resource, partitioned):
     return partition_key, metadata
 
 
+# fmt: off
 def sftp_get_recursive(
     context,
     sftp_client,
@@ -126,3 +127,4 @@ def sftp_get_recursive(
                 )
                 file_to_append["is_new"] = True
                 files.append(file_to_append)
+# fmt: on
