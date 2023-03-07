@@ -1,5 +1,4 @@
 from io import BytesIO
-import json
 
 import pandas
 
@@ -32,11 +31,12 @@ class JsonPartitionedIOManager(MemoizableIOManager):
     def _get_path(self, context) -> str:
         if context.has_asset_key:
             path = context.get_asset_identifier()
-            bucket_key = self.bucket.replace("-", "_")
             try:
-                del path[path.index(bucket_key)]
+                del path[path.index(self.bucket)]
+
             except ValueError:
-                ...
+                bucket_key = self.bucket.replace("-", "_")
+                del path[path.index(bucket_key)]
 
         else:
             path = ["storage", *context.get_identifier()]
@@ -119,9 +119,7 @@ class JsonPartitionedIOManager(MemoizableIOManager):
                 date_format="iso",
             )
 
-            pickled_obj_bytes = BytesIO(
-                bytes(pickled_obj, "utf-8")
-            )
+            pickled_obj_bytes = BytesIO(bytes(pickled_obj, "utf-8"))
             self.s3.upload_fileobj(pickled_obj_bytes, self.bucket, key)
             context.add_output_metadata(
                 {"uri": MetadataValue.path(path)} | context.metadata

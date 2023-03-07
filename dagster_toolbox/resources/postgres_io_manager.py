@@ -42,23 +42,35 @@ class PostgresIOManager(MemoizableIOManager):
             path = context.get_asset_identifier()
             context.log.debug(f"Asset identifier: {path}")
 
-            self.database_name = path[0]
-            self.schema_name = path[-2].replace("daily_", "")
+            self.database_name = path[0].replace("-", "_")
+
+            if len(path) == 4:
+                table_prefix = path[1].replace("-", "_")
+                table_name = path[2].replace("-", "_")
+
+                if table_prefix in table_name:
+                    self.schema_name = table_name
+                elif "daily_ga" in table_name:
+                    self.schema_name = table_name.replace("daily_", "")
+                else:
+                    self.schema_name = f"{table_prefix}__{table_name}"
+            else:
+                self.schema_name = path[-2].replace("daily_", "")
 
         else:
             path = context.get_identifier()
-            self.database_name = path[0]
-            self.schema_name = path[-2].replace("daily_", "")
+            context.log.debug(f"Identifier: {path}")
+            self.database_name = path[0].replace("-", "_")
+            self.schema_name = path[-2].replace("daily_", "").replace("-", "_")
 
+        context.log.debug(
+            f"Generated path: {self.database_name}.{self.schema_name}"
+        )
         return f"{self.database_name}.{self.schema_name}"
 
     def has_output(self, context):
         key = self._get_path(context)
-        self.logger.debug("has_output called")
-        self.logger.debug(key)
-        self.logger.debug(context.partition_key)
-        self.logger.debug(context.asset_key)
-        self.logger.debug(context.asset_info)
+        self.logger.debug(f"has_output called for {key}")
         return True
 
     def _rm_object(self, key, obj):
@@ -67,7 +79,7 @@ class PostgresIOManager(MemoizableIOManager):
 
         sql_statement = f"DELETE FROM {self.schema_name} "
         sql_statement += where_statement
-        self.logger.debug(f"Selete on {where_statement}")
+        self.logger.debug(f"Delete on {where_statement} for key {key}")
         self.engine.execute(sql_statement)
 
     def _has_object(self, key, obj):
@@ -80,6 +92,7 @@ class PostgresIOManager(MemoizableIOManager):
         try:
             results = self.engine.execute(sql_statement).fetchall()
             found_object = bool(len(results))
+
         except SQLAlchemyProgrammingError as e:
             self.logger.warning(e)
             found_object = False

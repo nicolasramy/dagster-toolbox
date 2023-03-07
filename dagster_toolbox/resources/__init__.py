@@ -1,6 +1,6 @@
 from .csv_partitioned_io_manager import csv_partitioned_io_manager
 from .json_partitioned_io_manager import json_partitioned_io_manager
-from .postgres_partitioned_io_manager import postgres_partitioned_io_manager
+from .postgres_partitionned_io_manager import postgres_partitioned_io_manager
 from .postgres_io_manager import postgres_io_manager
 from .object_storage import (
     analytics_objects,

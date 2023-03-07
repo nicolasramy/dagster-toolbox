@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dagster-toolbox",
-    version="0.0.1",
+    version="0.0.2",
     packages=find_packages(),
     author="Nicolas RAMY",
     author_email="nicolas.ramy@darkelda.com",
@@ -13,8 +13,10 @@ setup(
     install_requires=[
         "dagster==1.1.5",
         "dagster-pandas==0.17.5",
+        "google-api-python-client==2.68.0",
         "hvac==1.0.2",
         "minio==7.1.12",
+        "oauth2client==4.1.3",
         "pandas==1.5.2",
         "python-slugify==7.0.0",
         "requests==2.28.1",

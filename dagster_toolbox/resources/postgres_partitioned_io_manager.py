@@ -50,24 +50,30 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
             if len(path) == 4:
                 table_prefix = path[1].replace("-", "_")
                 table_name = path[2].replace("-", "_")
-                self.schema_name = f"{table_prefix}__{table_name}"
+
+                if table_prefix in table_name:
+                    self.schema_name = table_name
+                elif "daily_ga" in table_name:
+                    self.schema_name = table_name.replace("daily_", "")
+                else:
+                    self.schema_name = f"{table_prefix}__{table_name}"
             else:
                 self.schema_name = path[-2].replace("daily_", "")
 
         else:
             path = context.get_identifier()
+            context.log.debug(f"Identifier: {path}")
             self.database_name = path[0].replace("-", "_")
             self.schema_name = path[-2].replace("daily_", "").replace("-", "_")
 
+        context.log.debug(
+            f"Generated path: {self.database_name}.{self.schema_name}"
+        )
         return f"{self.database_name}.{self.schema_name}"
 
     def has_output(self, context):
         key = self._get_path(context)
-        self.logger.debug("has_output called")
-        self.logger.debug(key)
-        self.logger.debug(context.partition_key)
-        self.logger.debug(context.asset_key)
-        self.logger.debug(context.asset_info)
+        self.logger.debug(f"has_output called for {key}")
         return True
 
     def _rm_object(self, key, obj):
@@ -76,7 +82,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
         sql_statement = f"DELETE FROM {self.schema_name} "
         sql_statement += where_statement
-        self.logger.debug(f"Selete on {where_statement}")
+        self.logger.debug(f"Delete on {where_statement} for key {key}")
         self.engine.execute(sql_statement)
 
     def _has_object(self, key, obj):
@@ -141,12 +147,6 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
     def handle_output(self, context, obj):
         key = self._get_path(context)
-        context.log.debug(context.metadata)
-        context.log.debug(dir(context))
-        context.log.debug(dir(context.config))
-        context.log.debug(context.config)
-        context.log.debug(context.asset_info)
-        context.log.debug(dir(context.asset_info))
 
         if isinstance(context.dagster_type.typing_type, type(None)):
             check.invariant(
@@ -164,12 +164,6 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
             self._rm_object(key, obj)
 
         if obj is not None:
-            pickled_obj = obj.to_json(
-                orient="records",
-                date_format="iso",
-            )
-            context.log.debug(pickled_obj)
-
             obj.to_sql(
                 self.schema_name,
                 con=self.engine,

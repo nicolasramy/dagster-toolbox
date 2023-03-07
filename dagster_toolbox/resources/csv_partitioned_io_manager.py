@@ -1,6 +1,7 @@
 from io import BytesIO
 
 import pandas
+from slugify import slugify
 
 from dagster import (
     MemoizableIOManager,
@@ -30,20 +31,23 @@ class CSVPartitionedIOManager(MemoizableIOManager):
 
     def _get_path(self, context) -> str:
         context.log.debug(context.get_asset_identifier())
-        context.log.debug(context.get_identifier())
 
         if context.has_asset_key:
             path = context.get_asset_identifier()
-            bucket_key = self.bucket.replace("-", "_")
             try:
-                del path[path.index(bucket_key)]
+                del path[path.index(self.bucket)]
+
             except ValueError:
-                ...
+                bucket_key = self.bucket.replace("-", "_")
+                del path[path.index(bucket_key)]
 
         else:
             path = ["storage", *context.get_identifier()]
 
-        return "/".join(path) + ".csv"
+        new_path = list(map(slugify, path[:-1]))
+        new_path.append(slugify(path[-1]))
+
+        return "/".join(new_path) + ".csv"
 
     def has_output(self, context):
         key = self._get_path(context)
