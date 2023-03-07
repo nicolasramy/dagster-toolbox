@@ -12,7 +12,10 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "dagster==1.1.5",
+        "dagster-aws==0.17.5",
         "dagster-pandas==0.17.5",
+        "dagster-pandera==0.17.5",
+        "dagster-postgres==0.17.5",
         "google-api-python-client==2.68.0",
         "hvac==1.0.2",
         "minio==7.1.12",
@@ -20,6 +23,7 @@ setup(
         "pandas==1.5.2",
         "python-slugify==7.0.0",
         "requests==2.28.1",
+        "SQLAlchemy==1.4.45",
     ],
     url="https://github.com/nicolasramy/dagster-toolbox",
     classifiers=[
