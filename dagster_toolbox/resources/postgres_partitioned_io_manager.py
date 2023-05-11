@@ -159,11 +159,10 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
         context.log.debug(f"Writing DB object at: {key}")
 
-        if self._has_object(key, obj):
-            context.log.warning(f"Removing existing DB entries from {key}.")
-            self._rm_object(key, obj)
-
         if obj is not None:
+            if self._has_object(key, obj):
+                context.log.warning(f"Removing existing DB entries from {key}.")
+                self._rm_object(key, obj)
             obj.to_sql(
                 self.schema_name,
                 con=self.engine,
