@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dagster-toolbox",
-    version="0.0.4",
+    version="0.0.5",
     packages=find_packages(),
     author="Nicolas RAMY",
     author_email="nicolas.ramy@darkelda.com",
@@ -23,7 +23,7 @@ setup(
         "pandas==1.5.2",
         "python-slugify==7.0.0",
         "requests==2.28.1",
-        "SQLAlchemy==1.4.45",
+        "SQLAlchemy==1.4.46",
     ],
     url="https://github.com/nicolasramy/dagster-toolbox",
     classifiers=[
