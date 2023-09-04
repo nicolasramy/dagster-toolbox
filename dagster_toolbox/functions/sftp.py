@@ -40,9 +40,9 @@ def sftp_get_recursive(
     partitioned,
     files,
 ):
-    context.log.debug("Open {}".format(path))
+    context.log.debug(f"Open {path}")
     for item in sftp_client.listdir_attr(path):
-        remote_path = "{}/{}".format(path, item.filename)
+        remote_path = f"{path}/{item.filename}"
         mode = item.st_mode
 
         if stat.S_ISDIR(mode):

@@ -31,6 +31,14 @@ def prepare_object(file_resource, partitioned):
     return partition_key, metadata
 
 
+def is_file(ftp_client, filename):
+    try:
+        return ftp_client.size(filename) is not None
+
+    except ftplib.error_perm:
+        return False
+
+
 # fmt: off
 def ftp_get_recursive(
     context,
@@ -40,50 +48,38 @@ def ftp_get_recursive(
     partitioned,
     files,
 ):
-    context.log.debug("Open {}".format(path))
+    context.log.debug(f"Open {path}")
 
     ftp_client.cwd(path)
-    for item in ftp_client.nlst():
-        remote_path = "{}/{}".format(path, item.filename)
-        mode = item.st_mode
+    for filename in ftp_client.nlst():
+        context.log.debug(filename)
+        remote_path = f"{path}/{filename}"
 
-        if stat.S_ISDIR(mode):
-            ftp_get_recursive(
-                context,
-                ftp_client,
-                remote_path,
-                destination,
-                partitioned,
-                files,
-            )
+        if is_file(remote_path):
+            slugify_filename = slugify(filename)
 
-        elif stat.S_ISREG(mode):
-            with ftp_client.file(remote_path, mode="r") as file_resource:
-                slugify_filename = slugify(item.filename)
-
-                if len(slugify_filename) <= 4:
-                    context.log.warning(
-                        f"Unable to parse filename {item.filename}"
-                    )
-                    continue
-
-                if slugify_filename[-4] != "-":
-                    context.log.warning(
-                        f"Unable to parse extension for {item.filename}"
-                    )
-                    continue
-
-                object_filename = ".".join(
-                    [slugify_filename[:-4], slugify_filename[-4:][1:]]
+            if len(slugify_filename) <= 4:
+                context.log.warning(
+                    f"Unable to parse filename {filename}"
                 )
+                continue
 
-                if partitioned:
-                    current_partition = get_current_partition()
-                    object_name = f"{destination}/{current_partition}/{path}/{object_filename}"  # noqa: E501
-                else:
-                    object_name = f"{destination}/{path}/{object_filename}"
+            if slugify_filename[-4] != "-":
+                context.log.warning(
+                    f"Unable to parse extension for {filename}"
+                )
+                continue
 
-                object_name = object_name.replace("./", "").lower()
+            if partitioned:
+                current_partition = get_current_partition()
+                object_name = f"{destination}/{current_partition}/{path}/{object_filename}"  # noqa: E501
+            else:
+                object_name = f"{destination}/{path}/{object_filename}"
+
+            object_name = object_name.replace("./", "").lower()
+
+            # TODO: Improve below
+            with ftp_client.open(remote_path, mode="r") as file_resource:
 
                 raw_data = file_resource.read()
                 file_hash = sha512(raw_data).hexdigest()
@@ -96,11 +92,15 @@ def ftp_get_recursive(
 
                 file_to_append = {
                     "name": object_name,
-                    "filename": item.filename,
+                    "filename": filename,
                     "hash": file_hash,
                     "partition_key": partition_key,
                     "is_new": False,
                 }
+
+                object_filename = ".".join(
+                    [slugify_filename[:-4], slugify_filename[-4:][1:]]
+                )
 
                 object_stat = context.resources.legacy_objects.stat(object_name)
                 if object_stat:
