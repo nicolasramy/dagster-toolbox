@@ -83,6 +83,15 @@ def miscellaneous_objects(init_context):
     return Miscellaneous()
 
 
+class SaaS(ObjectStorage):
+    bucket = "saas"
+
+
+@resource
+def saas_objects(init_context):
+    return SaaS()
+
+
 class Test(ObjectStorage):
     bucket = "test"
 

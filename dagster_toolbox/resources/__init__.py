@@ -12,6 +12,7 @@ from .object_storage import (
     legacy_objects,
     logs_objects,
     miscellaneous_objects,
+    saas_objects,
     test_objects,
 )
 from .vault import vault
@@ -33,6 +34,7 @@ __all__ = [
     "legacy_objects",
     "logs_objects",
     "miscellaneous_objects",
+    "saas_objects",
     "test_objects",
     "vault",
 ]
