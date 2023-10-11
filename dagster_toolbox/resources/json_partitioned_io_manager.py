@@ -84,10 +84,7 @@ class JsonPartitionedIOManager(MemoizableIOManager):
         context.log.debug(f"Loading S3 object from: {self._uri_for_key(key)}")
 
         stream_bytes = BytesIO(
-            self.s3.get_object(
-                bucket_name=self.bucket,
-                object_name=key
-            )["Body"].read()
+            self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read()
         )
 
         obj = pandas.read_json(

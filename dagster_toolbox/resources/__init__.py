@@ -4,6 +4,7 @@ from .postgres_partitioned_io_manager import postgres_partitioned_io_manager
 from .postgres_io_manager import postgres_io_manager
 from .object_storage import (
     analytics_objects,
+    connecting_objects,
     customers_objects,
     datalake_objects,
     datawarehouse_objects,
@@ -12,7 +13,6 @@ from .object_storage import (
     legacy_objects,
     logs_objects,
     miscellaneous_objects,
-    saas_objects,
     test_objects,
 )
 from .vault import vault
@@ -26,6 +26,7 @@ __all__ = [
     "postgres_io_manager",
     # ObjectStorage
     "analytics_objects",
+    "connecting_objects",
     "customers_objects",
     "datalake_objects",
     "datawarehouse_objects",
@@ -34,7 +35,6 @@ __all__ = [
     "legacy_objects",
     "logs_objects",
     "miscellaneous_objects",
-    "saas_objects",
     "test_objects",
     "vault",
 ]

@@ -90,24 +90,10 @@ class CSVPartitionedIOManager(MemoizableIOManager):
         context.log.debug(f"Loading S3 object from: {self._uri_for_key(key)}")
 
         stream_bytes = BytesIO(
-            self.s3.get_object(
-                bucket_name=self.bucket,
-                object_name=key
-            )["Body"].read()
+            self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read()
         )
 
-        try:
-            obj = pandas.read_csv(
-                stream_bytes,
-                encoding="utf-8",
-                parse_dates=["partition_key"],
-                dayfirst=False,
-            )
-        except ValueError:
-            obj = pandas.read_csv(
-                stream_bytes,
-                encoding="utf-8",
-            )
+        obj = pandas.read_csv(stream_bytes, encoding="utf-8")
 
         return obj
 

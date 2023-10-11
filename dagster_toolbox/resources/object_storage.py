@@ -11,6 +11,15 @@ def analytics_objects(init_context):
     return Analytics()
 
 
+class Connecting(ObjectStorage):
+    bucket = "connecting"
+
+
+@resource
+def connecting_objects(init_context):
+    return Connecting()
+
+
 class Customers(ObjectStorage):
     bucket = "customers"
 
@@ -81,15 +90,6 @@ class Miscellaneous(ObjectStorage):
 @resource
 def miscellaneous_objects(init_context):
     return Miscellaneous()
-
-
-class SaaS(ObjectStorage):
-    bucket = "saas"
-
-
-@resource
-def saas_objects(init_context):
-    return SaaS()
 
 
 class Test(ObjectStorage):
