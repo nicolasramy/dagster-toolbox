@@ -22,7 +22,7 @@ setup(
         "oauth2client==4.1.3",
         "pandas==1.5.2",
         "python-slugify==7.0.0",
-        "requests==2.28.1",
+        "requests==2.31.0",
         "SQLAlchemy==1.4.46",
     ],
     url="https://github.com/nicolasramy/dagster-toolbox",
