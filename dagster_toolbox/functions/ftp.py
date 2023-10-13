@@ -1,4 +1,3 @@
-from datetime import datetime
 import ftplib
 from hashlib import sha512
 from io import BytesIO
