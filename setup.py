@@ -25,7 +25,7 @@ setup(
         "requests==2.31.0",
         "SQLAlchemy==1.4.46",
     ],
-    url="https://github.com/nicolasramy/dagster-toolbox",
+    url="https://nicolasramy.github.io/dagster-toolbox/",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
