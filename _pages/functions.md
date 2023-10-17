@@ -2,7 +2,6 @@
 title: Functions
 author: Nicolas Ramy
 date: 2022-12-01
-category: Jekyll
 layout: post
 ---
 

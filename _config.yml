@@ -17,8 +17,8 @@ title: Dagster Toolbox
 email: nicolas.ramy@darkelda.com
 description: >- # this means to ignore newlines until "baseurl:"
   A set of tools to ease Dagster usage.
-url: "https://nicolasramy.github.io" # the base hostname & protocol for your site, e.g. http://example.com
-baseurl: "/dagster-toolbox" # the subpath of your site, e.g. /blog
+url: "https://nicolasramy.github.io"
+baseurl: "/dagster-toolbox"
 twitter_username:
 github_username:  nicolasramy
 
@@ -55,9 +55,6 @@ markdown_ext:             markdown,mkdown,mkdn,mkd,md
 # Permalinks
 permalink:                /:categories/:year-:month-:day-:title:output_ext
 
-exclude:
-  - _drafts
-
 collections:
   pages:
     output: true
@@ -85,3 +82,7 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
+
+exclude:
+  - _drafts
+  - vendor/bundle/
