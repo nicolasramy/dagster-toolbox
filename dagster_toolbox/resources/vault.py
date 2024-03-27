@@ -30,8 +30,6 @@ class Vault:
         if self.client.sys.is_sealed():
             self.client.sys.submit_unseal_keys(self.keys)
 
-        self.client.kv.default_kv_version = 2
-
     def get_data(self, path):
         response = self.client.secrets.kv.read_secret_version(path=path)
         return response["data"]["data"]
