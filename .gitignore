@@ -1,0 +1,6 @@
+.idea
+_posts
+_site
+vendor
+Gemfile.lock
+.bundle
