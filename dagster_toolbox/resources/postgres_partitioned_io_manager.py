@@ -42,6 +42,8 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
     def _get_path(self, context) -> str:
         if context.has_asset_key:
+            asset_partition_keys = context.asset_partition_keys()
+            context.log.debug(f"Asset partition keys: {asset_partition_keys}")
             path = context.get_asset_identifier()
             context.log.debug(f"Asset identifier: {path}")
 
