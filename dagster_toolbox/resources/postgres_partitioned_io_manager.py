@@ -39,6 +39,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
             f"postgresql+psycopg2://"
             f"{self.username}:{self.password}@{self.hostname}:{self.port}/{self.dbname}"  # noqa: E501
         )
+        self.connection = self.engine.connect()
 
     def _get_path(self, context) -> str:
         if context.has_asset_key:
@@ -85,7 +86,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
         sql_statement = f"DELETE FROM {self.schema_name} "
         sql_statement += where_statement
         self.logger.debug(f"Delete on {where_statement} for key {key}")
-        self.engine.execute(sql_statement)
+        self.connection.execute(sql_statement)
 
     def _has_object(self, key, obj):
 
@@ -143,7 +144,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
         if context.partition_key:
             sql_statement += f"WHERE partition_key = '{context.partition_key}'"
 
-        obj = pandas.read_sql(sql_statement, con=self.engine)
+        obj = pandas.read_sql(sql_statement, con=self.connection)
 
         return obj
 
