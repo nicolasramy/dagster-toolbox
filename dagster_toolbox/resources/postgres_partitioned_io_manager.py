@@ -1,6 +1,7 @@
 import pandas
 from pandas import DataFrame
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError as SQLAlchemyProgrammingError
 
 from dagster import (
@@ -39,11 +40,12 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
             f"postgresql+psycopg2://"
             f"{self.username}:{self.password}@{self.hostname}:{self.port}/{self.dbname}"  # noqa: E501
         )
-        self.connection = self.engine.connect()
+        session_class = sessionmaker(self.engine)
+        self.session = session_class()
 
     def _get_path(self, context) -> str:
         if context.has_asset_key:
-            asset_partition_keys = context.asset_partition_keys()
+            asset_partition_keys = context.asset_partition_keys
             context.log.debug(f"Asset partition keys: {asset_partition_keys}")
             path = context.get_asset_identifier()
             context.log.debug(f"Asset identifier: {path}")
@@ -86,7 +88,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
         sql_statement = f"DELETE FROM {self.schema_name} "
         sql_statement += where_statement
         self.logger.debug(f"Delete on {where_statement} for key {key}")
-        self.connection.execute(sql_statement)
+        self.session.execute(text(sql_statement))
 
     def _has_object(self, key, obj):
 
@@ -96,7 +98,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
         sql_statement += where_statement
 
         try:
-            results = self.engine.execute(sql_statement).fetchall()
+            results = self.session.execute(text(sql_statement)).fetchall()
             found_object = bool(len(results))
 
         except SQLAlchemyProgrammingError as e:
@@ -144,7 +146,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
         if context.partition_key:
             sql_statement += f"WHERE partition_key = '{context.partition_key}'"
 
-        obj = pandas.read_sql(sql_statement, con=self.connection)
+        obj = pandas.read_sql(sql_statement, con=self.engine.connect())
 
         return obj
 
@@ -168,7 +170,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
                 self._rm_object(key, obj)
             obj.to_sql(
                 self.schema_name,
-                con=self.engine,
+                con=self.engine.connect(),
                 index=False,
                 if_exists="append",
             )
