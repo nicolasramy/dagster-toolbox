@@ -84,6 +84,7 @@ class PostgresIOManager(MemoizableIOManager):
         sql_statement += where_statement
         self.logger.debug(f"Delete on {where_statement} for key {key}")
         self.session.execute(text(sql_statement))
+        self.session.commit()
 
     def _has_object(self, key, obj):
 

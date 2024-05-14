@@ -45,6 +45,19 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
     def _get_path(self, context) -> str:
         if context.has_asset_key:
+            context.log.debug(f"config: {context.config}")
+            context.log.debug(
+                f"definition_metadata: {context.definition_metadata}"
+            )
+            context.log.debug(
+                f"asset_partition_key_range: "
+                f"{context.asset_partition_key_range}"
+            )
+
+            asset_key = context.asset_key
+            context.log.debug(f"Asset key: {asset_key}")
+            asset_partition_key = context.asset_partition_key
+            context.log.debug(f"Asset partition key: {asset_partition_key}")
             asset_partition_keys = context.asset_partition_keys
             context.log.debug(f"Asset partition keys: {asset_partition_keys}")
             path = context.get_asset_identifier()
@@ -89,6 +102,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
         sql_statement += where_statement
         self.logger.debug(f"Delete on {where_statement} for key {key}")
         self.session.execute(text(sql_statement))
+        self.session.commit()
 
     def _has_object(self, key, obj):
 
