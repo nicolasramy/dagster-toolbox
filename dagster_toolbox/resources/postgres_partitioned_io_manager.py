@@ -45,22 +45,18 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
     def _get_path(self, context) -> str:
         if context.has_asset_key:
-            context.log.debug(f"config: {context.config}")
-            context.log.debug(
-                f"asset_partition_key_range: "
-                f"{context.asset_partition_key_range}"
-            )
-
             asset_key = context.asset_key
-            context.log.debug(f"Asset key: {asset_key}")
-            asset_partition_key = context.asset_partition_key
-            context.log.debug(f"Asset partition key: {asset_partition_key}")
-            asset_partition_keys = context.asset_partition_keys
-            context.log.debug(f"Asset partition keys: {asset_partition_keys}")
-            path = context.get_asset_identifier()
+
+            context.log.debug(f"Asset key: {asset_key.to_user_string()}")
+
+            asset_path = asset_key.path
+            database_name = asset_path[0].replace("-", "_")
+            schema_name = asset_path[-1]
+            path = f"{database_name}.{schema_name}"
+
             context.log.debug(f"Asset identifier: {path}")
 
-            self.database_name = path[0].replace("-", "_")
+            self.database_name = database_name
 
             if len(path) == 4:
                 table_prefix = path[1].replace("-", "_")
@@ -73,7 +69,7 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
                 else:
                     self.schema_name = f"{table_prefix}__{table_name}"
             else:
-                self.schema_name = path[-2].replace("daily_", "")
+                self.schema_name = schema_name
 
         else:
             path = context.get_identifier()
@@ -154,8 +150,17 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
         sql_statement = f"SELECT * FROM {self.schema_name} "
 
-        if context.partition_key:
-            sql_statement += f"WHERE partition_key = '{context.partition_key}'"
+        context.log.debug(context.partition_key)
+        context.log.debug(context.asset_partition_keys)
+
+        if context.asset_partition_keys:
+            asset_partition_keys =  ", ".join([
+                f"'{item}'"
+                for item in context.asset_partition_keys
+            ])
+            sql_statement += f"WHERE partition_key IN ({asset_partition_keys})"
+
+        context.log.debug(sql_statement)
 
         obj = pandas.read_sql(sql_statement, con=self.engine.connect())
 
