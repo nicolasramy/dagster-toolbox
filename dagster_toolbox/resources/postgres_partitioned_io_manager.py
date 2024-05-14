@@ -150,9 +150,6 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
 
         sql_statement = f"SELECT * FROM {self.schema_name} "
 
-        context.log.debug(context.partition_key)
-        context.log.debug(context.asset_partition_keys)
-
         if context.asset_partition_keys:
             asset_partition_keys =  ", ".join([
                 f"'{item}'"
