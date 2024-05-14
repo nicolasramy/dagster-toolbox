@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dagster-toolbox",
-    version="0.0.15",
+    version="0.0.16",
     packages=find_packages(),
     author="Nicolas RAMY",
     author_email="nicolas.ramy@darkelda.com",

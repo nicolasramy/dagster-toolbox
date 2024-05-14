@@ -47,9 +47,6 @@ class PostgresPartitionedIOManager(MemoizableIOManager):
         if context.has_asset_key:
             context.log.debug(f"config: {context.config}")
             context.log.debug(
-                f"definition_metadata: {context.definition_metadata}"
-            )
-            context.log.debug(
                 f"asset_partition_key_range: "
                 f"{context.asset_partition_key_range}"
             )
