@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dagster-toolbox",
-    version="0.0.18",
+    version="0.0.20",
     packages=find_packages(),
     author="Nicolas RAMY",
     author_email="nicolas.ramy@darkelda.com",
@@ -21,6 +21,7 @@ setup(
         "minio==7.2.5",
         "oauth2client==4.1.3",
         "pandas==2.2.1",
+        "pandera==0.19.3",
         "python-slugify==8.0.4",
         "requests==2.31.0",
         "SQLAlchemy==2.0.29",
