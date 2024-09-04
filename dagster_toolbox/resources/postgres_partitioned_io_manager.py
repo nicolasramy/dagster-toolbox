@@ -12,7 +12,7 @@ from dagster import (
     io_manager,
     get_dagster_logger,
 )
-import dagster._check as check
+from dagster import check
 
 POSTGRES_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 

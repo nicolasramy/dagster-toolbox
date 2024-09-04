@@ -12,7 +12,7 @@ from dagster import (
     get_dagster_logger,
 )
 
-from dagster import _check as check
+from dagster import check
 
 
 class JsonPartitionedIOManager(ConfigurableIOManager):
