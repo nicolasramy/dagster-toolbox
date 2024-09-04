@@ -5,18 +5,19 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import ProgrammingError as SQLAlchemyProgrammingError
 
 from dagster import (
+    Any,
+    ConfigurableIOManager,
     Field,
     StringSource,
     io_manager,
     get_dagster_logger,
-    MemoizableIOManager,
 )
 import dagster._check as check
 
 POSTGRES_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-class PostgresIOManager(MemoizableIOManager):
+class PostgresIOManager(ConfigurableIOManager):
     def __init__(
         self,
         username,
@@ -24,7 +25,9 @@ class PostgresIOManager(MemoizableIOManager):
         hostname,
         port,
         dbname,
+        **data: Any
     ):
+        super().__init__(**data)
         self.logger = get_dagster_logger()
 
         self.username = username

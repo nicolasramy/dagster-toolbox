@@ -3,7 +3,8 @@ from io import BytesIO
 import pandas
 
 from dagster import (
-    MemoizableIOManager,
+    Any,
+    ConfigurableIOManager,
     io_manager,
     MetadataValue,
     Field,
@@ -14,13 +15,9 @@ from dagster import (
 from dagster import _check as check
 
 
-class JsonPartitionedIOManager(MemoizableIOManager):
-    def __init__(
-        self,
-        s3_bucket,
-        s3_session,
-        s3_prefix=None,
-    ):
+class JsonPartitionedIOManager(ConfigurableIOManager):
+    def __init__(self, s3_bucket, s3_session, s3_prefix=None, **data: Any):
+        super().__init__(**data)
         self.logger = get_dagster_logger()
 
         self.bucket = check.str_param(s3_bucket, "s3_bucket")
