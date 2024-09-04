@@ -5,7 +5,7 @@ from dagster_pandera import pandera_schema_to_dagster_type
 
 
 # fmt: off
-class GAEventsDataFrame(pandera.SchemaModel):
+class GAEventsDataFrame(pandera.DataFrameModel):
     event_category: Series[String] = pandera.Field(
         nullable=True,
         description="The event category.",
@@ -51,7 +51,7 @@ class GAEventsDataFrame(pandera.SchemaModel):
     )
 
 
-class GASessionsDataFrame(pandera.SchemaModel):
+class GASessionsDataFrame(pandera.DataFrameModel):
     continent: Series[String] = pandera.Field(
         nullable=True,
         description="Users' continent, derived from users' IP "
@@ -132,7 +132,7 @@ class GASessionsDataFrame(pandera.SchemaModel):
     )
 
 
-class GAUsersDataFrame(pandera.SchemaModel):
+class GAUsersDataFrame(pandera.DataFrameModel):
     continent: Series[String] = pandera.Field(
         nullable=True,
         description="Users' continent, derived from users' IP "

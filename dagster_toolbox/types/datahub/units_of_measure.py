@@ -5,7 +5,7 @@ from dagster_pandera import pandera_schema_to_dagster_type
 
 
 # fmt: off
-class UnitsOfMeasureDataFrame(pandera.SchemaModel):
+class UnitsOfMeasureDataFrame(pandera.DataFrameModel):
     partition_key: Series[DateTime] = pandera.Field(
         nullable=True,
         description="Current partition.",
@@ -34,7 +34,7 @@ class UnitsOfMeasureDataFrame(pandera.SchemaModel):
     )
 
 
-class UnitsOfMeasureLevelsDataFrame(pandera.SchemaModel):
+class UnitsOfMeasureLevelsDataFrame(pandera.DataFrameModel):
     partition_key: Series[DateTime] = pandera.Field(
         nullable=True,
         description="Current partition.",
