@@ -16,6 +16,7 @@ setup(
         "dagster-pandas==0.24.4",
         "dagster-pandera==0.24.4",
         "dagster-postgres==0.24.4",
+        "dlt==0.5.4",
         "google-api-python-client==2.143.0",
         "hvac==2.3.0",
         "minio==7.2.8",
